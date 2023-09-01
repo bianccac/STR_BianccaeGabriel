@@ -31,6 +31,7 @@ void initBuffer (Buffer* buffer){
 void *produce(void *arg){
 
 	int item;
+	int id = *(int*)arg;
 	while(1){
 		item = rand()%100; // Produz um novo item
 		
@@ -41,7 +42,7 @@ void *produce(void *arg){
 		buffer.queue[buffer.end] = item;
 		buffer.end = (buffer.end + 1) % BUFFER_SIZE;
 		
-		printf("Produzido: %d\n", item);
+		printf("Produtor %d produziu: %d\n", id, item);
 		
 		sem_post(&buffer.mutex); // Sai seção crítica
 		sem_post(&buffer.full); // Sinaliza item no buffer
@@ -54,6 +55,7 @@ void *produce(void *arg){
 void *consume(void *arg){
 	
 	int item;
+	int id = *(int*)arg;
 	while(1){
 		
 		sem_wait(&buffer.full); // Espera a sinalização (um item no buffer para consumir)
@@ -63,7 +65,7 @@ void *consume(void *arg){
 		item = buffer.queue[buffer.init]; //Retira o primeiro item da fila
 		buffer.init = (buffer.init + 1) % BUFFER_SIZE;
 		
-		printf("Consumido: %d\n", item);
+		printf("Consumidor %d consumiu: %d\n", id, item);
 		
 		sem_post(&buffer.mutex); // Sai seção crítica
 		sem_post(&buffer.empty); // Sinaliza espaço vazio no buffer
@@ -82,13 +84,27 @@ int main(){
 	sem_init(&buffer.full,0,0);
 	sem_init(&buffer.empty,0,BUFFER_SIZE);
 	
-	pthread_t producer, consumer;
+	pthread_t producer[NUM_PRODUCERS], consumer[NUM_CONSUMERS];
 	
-	pthread_create(&producer, NULL, produce, NULL); // cria thread do produtor
-	pthread_create(&consumer, NULL, consume, NULL); // cria thread do consumidor
+	for(int i = 0; i < 3; i++){
 	
-	pthread_join(producer, NULL); // espera a thread acabar a execução
-	pthread_join(consumer, NULL);
+		int id_prod = i;
+		pthread_create(&producer[i], NULL, produce, &id_prod); // cria thread do produtor	
+		
+	}
+	for(int i = 0; i < 3; i++){
+	
+		int id_cons = i;
+		pthread_create(&consumer[i], NULL, consume, &id_cons); // cria thread do consumidor
+	
+		
+	}
+	
+	for(int i = 0; i < 3 ; i++){
+	
+		pthread_join(producer[i], NULL); // espera a thread acabar a execução
+		pthread_join(consumer[i], NULL);
+	}
 	
 	sem_destroy(&buffer.mutex);
 	sem_destroy(&buffer.full);
