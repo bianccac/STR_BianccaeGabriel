@@ -10,7 +10,6 @@
 
 typedef struct {
 	int queue[BUFFER_SIZE];
-	int counter; // Contagem num itens no buffer
 	int init; // Representa o primeiro item do buffer
 	int end; // Representa o último item do buffer
 	sem_t mutex;
