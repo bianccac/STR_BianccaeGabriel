@@ -1,4 +1,14 @@
 #include <stdio.h>
+#include <ctype.h>
+
+typedef struct {
+	
+	int period;
+	int deadline;
+	int exec_time;
+	char name[5];
+		
+} Task;
 
 int main(int argc, char *argv[]) {
     // Verifica se o nome do arquivo foi passado como argumento
