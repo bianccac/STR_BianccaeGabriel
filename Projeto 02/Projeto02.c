@@ -169,43 +169,59 @@ void rate_monotonic_scheduler(Carga carga){
 void earlier_deadline_first_scheduler(Carga carga){
 
 	float load=0;//Variável que armazenará o total de carga demandada
-	bool flag = false; //caso em que deve ser tomado o menor valor entre período e deadline, D é arbitrário
+	bool flag_a = false; //caso em que deve ser tomado o menor valor entre período e deadline, D é arbitrário
+	bool flag_m = false; //caso em que D < P e o teste é apenas necessário
 	
 	for(int i = 0; i<carga.num_tarefas; i++){
 		if(carga.tarefas[i].deadline < carga.tarefas[i].period){
-			continue;
-			//Se D < P, será usado o Deadline
+			flag_m = true;
+			//Se D < P, o teste é apenas necessário
 		}
 		else if(carga.tarefas[i].period == carga.tarefas[i].deadline){
 			continue;	
-			//Se D = P, tanto faz um ou outro, então usar-se-á o Deadline	
+			//Se D = P, usar-se-á o Deadline e o teste é suficiente	
 		}
 		else{
-			flag = true;
+			flag_a = true;
 			/*Para um D arbitrário, entra-se no caso especial em que será usado o menor entre D e P
 			Uma única ocorrência já define a flag como true o que já redireciona o 
 			código para a condição de D arbitrário*/
 		}
 	}
-	
-	if(flag){
+
+	printf("\tEDF: ");//Apresenta os resultados	
+
+	if(flag_a){
 		for(int j = 0; j < carga.num_tarefas; j++){
 			load += (float)carga.tarefas[j].exec_time/fmin(carga.tarefas[j].deadline,carga.tarefas[j].period);
 			//Para D arbitrário, calcula a carga considerando o menor entre D e P na razão com o tempo de execução	
 		}
+		if(load<=1){
+			printf("INCONCLUSIVO\n");
+		}else{
+			printf("NÃO\n");
+		}
 	}
-	else{
+	else if(flag_m){
 		for(int j = 0; j <carga.num_tarefas; j++){
 			load += (float)carga.tarefas[j].exec_time/(float)carga.tarefas[j].deadline;
 			//Tanto se D < P ou se D = P, usa-se o D
 		}
-	}
-	
-	printf("\tEDF: ");//Apresenta os resultados
-	if(load<=1){
-		printf("SIM\n");
+		if(load<=1){
+			printf("INCONCLUSIVO\n");
+		}else{
+			printf("NÃO\n");
+		}
 	}else{
-		printf("NÃO\n");
+		for(int j = 0; j <carga.num_tarefas; j++){
+			load += (float)carga.tarefas[j].exec_time/(float)carga.tarefas[j].deadline;
+			//Se D = P, usa-se o D
+		}
+		if(load<=1){
+			printf("SIM\n");
+		}else{
+			printf("NÃO\n");
+		}
 	}
 	
 }
@@ -313,8 +329,3 @@ int main(int argc, char *argv[]) {
             earlier_deadline_first_scheduler(cargas[i]);
         }
     }
-
-    	
-    return 0;
-}
-
